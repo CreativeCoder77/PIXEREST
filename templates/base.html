@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PIXEREST - Pixel Art & More{% endblock %}</title>
+    <!-- Google Fonts for pixel font -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <!-- Google Material Symbols for icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+    <style>
+        /* General styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Pixel font for headings, fallback for body */
+            background: #1a1a2e; /* Deep dark blue */
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #e0e0e0; /* Light text for dark background */
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Pixel art background elements (subtle) */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            opacity: 0.1; /* Very subtle */
+            background: repeating-linear-gradient(
+                45deg,
+                #2a0a4a,
+                #2a0a4a 2px,
+                #0d0d2b 2px,
+                #0d0d2b 4px
+            );
+            z-index: -1;
+            width: 100vw;
+            height: 100vh;
+            top: 0;
+            left: 0;
+        }
+
+        /* Navigation */
+        .navbar {
+            background: #0d0d2b; /* Darker blue for navbar */
+            padding: 1.2rem 2rem; /* Increased padding for more height */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Stronger shadow */
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 2px solid #ff007f; /* Vibrant accent line */
+            display: flex; /* Ensure flex for internal alignment */
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px; /* Wider container */
+            margin: 0 auto;
+            width: 100%; /* Take full width of navbar */
+        }
+
+        .logo {
+            font-family: 'Press Start 2P', cursive; /* Apply pixel font */
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #00c6ff; /* Cyan color for logo */
+            text-shadow: 2px 2px 0 #0072ff, -2px -2px 0 #ff007f; /* Pixelated text shadow */
+            letter-spacing: 2px;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 1.5rem;
+            align-items: center;
+            margin-left: 2rem; /* Space from logo */
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #c0c0c0;
+            font-weight: 500;
+            transition: all 0.2s ease-in-out;
+            padding: 0.5rem 1rem;
+            border-radius: 4px; /* Sharper corners */
+            font-size: 0.95rem;
+            text-transform: uppercase;
+        }
+
+        .nav-links a:hover {
+            background: #ff007f; /* Pink highlight */
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 0, 127, 0.4);
+            border: 1px solid #ff8c00; /* Orange border on hover */
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+            margin-left: auto; /* Push to the right */
+        }
+
+        .action-icon-btn {
+            background: #2a0a4a;
+            color: #00c6ff; /* Cyan icon */
+            border: 2px solid #00c6ff;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 3px 3px 0 #0072ff;
+        }
+
+        .action-icon-btn:hover {
+            background: #ff007f;
+            color: white;
+            border-color: #ff8c00;
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 #ff8c00;
+        }
+
+        /* Navbar Search Bar */
+        .navbar-search-container {
+            display: none; /* Hidden by default */
+            flex-grow: 1;
+            max-width: 500px;
+            margin-left: 2rem;
+            gap: 8px;
+            background: #1a1a2e;
+            border: 2px solid #00c6ff;
+            border-radius: 6px;
+            padding: 5px 8px;
+            box-shadow: 3px 3px 0 #0072ff;
+            align-items: center;
+        }
+
+        .navbar-search-container.active {
+            display: flex;
+        }
+
+        .navbar-search-input {
+            flex-grow: 1;
+            padding: 8px 10px;
+            font-size: 0.9rem;
+            border: none;
+            background: transparent;
+            color: #e0e0e0;
+            outline: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar-search-input::placeholder {
+            color: #a0a0a0;
+        }
+
+        .navbar-search-btn {
+            background: #ff007f;
+            color: white;
+            border: 2px solid #ff8c00;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.2s ease;
+            box-shadow: 2px 2px 0 #ff8c00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .navbar-search-btn:hover {
+            background: #00c6ff;
+            border-color: #0072ff;
+            transform: translate(1px, 1px);
+            box-shadow: 1px 1px 0 #0072ff;
+        }
+
+
+        .mobile-menu {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+        }
+
+        .hamburger {
+            width: 25px;
+            height: 3px;
+            background: #e0e0e0;
+            margin: 3px 0;
+            transition: 0.3s;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px; /* Wider content area */
+            margin: 0 auto;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: #0d0d2b;
+                flex-direction: column;
+                padding: 1rem;
+                box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+                border-top: 2px solid #ff007f;
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .mobile-menu {
+                display: flex;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .navbar {
+                padding: 0.8rem 1rem;
+            }
+
+            .header-actions {
+                display: none; /* Hide action buttons on small screens for simplicity */
+            }
+
+            .navbar-search-container {
+                margin-left: 0;
+                width: 100%;
+                padding: 5px;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">PIXEREST</div>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/explore">Explore</a></li>
+                <li><a href="/wallpaper">Wallpapers</a></li> {# New Wallpaper Link #}
+            </ul>
+            <!-- Search bar in Navbar (hidden by default, shown on search) -->
+            <div class="navbar-search-container" id="navbarSearchContainer">
+                <input type="text" id="navbarSearchInput" class="navbar-search-input" placeholder="SEARCH PIXEL ART...">
+                <button onclick="performSearchFromNavbar()" class="navbar-search-btn">
+                    <span class="material-symbols-outlined">search</span>
+                </button>
+            </div>
+            <div class="header-actions">
+                <!-- Removed notifications and upload buttons as per request -->
+            </div>
+            <div class="mobile-menu" onclick="toggleMenu()">
+                <div class="hamburger"></div>
+                <div class="hamburger"></div>
+                <div class="hamburger"></div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        function toggleMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const navbar = document.querySelector('.navbar');
+            const navLinks = document.getElementById('navLinks');
+
+            if (!navbar.contains(event.target) && navLinks.classList.contains('active')) {
+                navLinks.classList.remove('active');
+            }
+        });
+
+        // Global function to handle search from navbar
+        function performSearchFromNavbar() {
+            const navbarSearchInput = document.getElementById('navbarSearchInput');
+            const query = navbarSearchInput.value.trim();
+
+            // Check if we are on the wallpaper page
+            if (window.location.pathname === '/wallpaper') {
+                // If on the wallpaper page, call its specific search function
+                // This function will be defined in wallpaper.html
+                if (typeof searchWallpapersFromNavbar === 'function') {
+                    searchWallpapersFromNavbar(query);
+                }
+            } else {
+                // For other pages, redirect to home with the search query
+                window.location.href = `/?q=${encodeURIComponent(query)}`;
+            }
+        }
+
+        // Logic to show navbar search bar based on current page
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbarSearchContainer = document.getElementById('navbarSearchContainer');
+            const currentPath = window.location.pathname;
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialQuery = urlParams.get('q') || '';
+
+            // Show navbar search on explore page or image detail page, or if there's an initial query
+            // Also show if current path is the main index page
+            if (currentPath === '/' || currentPath === '/explore' || currentPath === '/image_detail' || initialQuery) {
+                navbarSearchContainer.classList.add('active');
+                if (initialQuery) {
+                    document.getElementById('navbarSearchInput').value = initialQuery;
+                }
+            } else {
+                navbarSearchContainer.classList.remove('active');
+            }
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+

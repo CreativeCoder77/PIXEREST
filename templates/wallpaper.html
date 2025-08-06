@@ -1,0 +1,662 @@
+{% extends "base.html" %}
+
+{% block title %}PIXEREST - Wallpapers{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Override main-content padding for this page to allow full width gallery */
+    body > .main-content {
+        padding: 0; /* Remove padding from the main content area */
+    }
+
+    /* General container for the wallpaper page content */
+    .wallpaper-container {
+        padding: 0; /* Removed padding to allow full width content */
+        width: 100%; /* Ensure it takes full available width */
+        margin: 0 auto;
+        color: #e0e0e0;
+        text-align: center;
+    }
+
+    /* Header section for wallpapers */
+    .wallpaper-header {
+        margin-bottom: 2rem;
+        padding: 2rem 5px; /* Add padding back to header content, 5px for sides */
+    }
+
+    .wallpaper-header h1 {
+        font-family: 'Press Start 2P', cursive;
+        font-size: 2.5rem;
+        margin-bottom: 0.8rem;
+        color: #00c6ff; /* Cyan for wallpaper title */
+        text-shadow: 3px 3px 0 #0072ff, -3px -3px 0 #ff007f; /* Multi-color pixel shadow */
+        letter-spacing: 3px;
+    }
+
+    .wallpaper-header p {
+        font-size: 1.1rem;
+        margin-bottom: 1.5rem;
+        color: #c0c0c0;
+    }
+
+    #currentQueryDisplay {
+        font-style: italic;
+        opacity: 0.8;
+        margin-top: 10px;
+        font-size: 0.9rem;
+    }
+
+    /* Search and Random buttons container */
+    .wallpaper-search-controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        background: #2a0a4a; /* Dark purple background */
+        border: 2px solid #00c6ff; /* Cyan border */
+        border-radius: 6px; /* Slightly rounded, but still blocky */
+        padding: 10px;
+        box-shadow: 5px 5px 0 #0072ff; /* Strong pixelated shadow */
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .wallpaper-search-input {
+        padding: 12px 15px;
+        flex-grow: 1;
+        max-width: 500px;
+        font-size: 1rem;
+        border: none;
+        border-radius: 4px;
+        outline: none;
+        transition: all 0.2s ease;
+        background: #1a1a2e; /* Even darker input background */
+        color: #e0e0e0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .wallpaper-search-input::placeholder {
+        color: #a0a0a0;
+    }
+
+    .wallpaper-btn {
+        padding: 12px 18px;
+        font-size: 1rem;
+        background: #ff007f; /* Pink button */
+        color: white;
+        border: 2px solid #ff8c00; /* Orange border */
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 600;
+        box-shadow: 3px 3px 0 #ff8c00; /* Pixelated shadow */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .wallpaper-btn:hover {
+        background: #00c6ff; /* Cyan on hover */
+        border-color: #0072ff;
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0 #0072ff;
+    }
+
+    .wallpaper-btn.random-btn {
+        background: linear-gradient(45deg, #667eea, #764ba2); /* Purple gradient for random */
+        border: 2px solid #5a2e8c;
+        box-shadow: 3px 3px 0 #4a1e7c;
+    }
+
+    .wallpaper-btn.random-btn:hover {
+        background: linear-gradient(45deg, #764ba2, #667eea);
+        border-color: #6a3e9c;
+        box-shadow: 1px 1px 0 #5a2e8c;
+    }
+
+    /* Gallery for wallpapers - Modified for asymmetrical design */
+    .wallpaper-gallery {
+        display: grid; /* Use CSS Grid */
+        /* Adjusted grid-template-columns for more asymmetrical look */
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Flexible columns, minimum 250px */
+        grid-auto-rows: minmax(200px, auto); /* Minimum row height */
+        gap: 0; /* Removed gap between grid items */
+        margin-bottom: 2rem;
+        padding: 0 5px; /* 5px padding to prevent images from touching screen edges */
+    }
+
+    .wallpaper-image-card {
+        position: relative;
+        margin-bottom: 0; /* Removed margin-bottom as grid handles spacing */
+        border-radius: 8px; /* Reinstated border-radius */
+        overflow: hidden;
+        background: #1a1a2e; /* Dark background for card */
+        border: 2px solid #00c6ff; /* Reinstated border */
+        box-shadow: 5px 5px 0 #0072ff; /* Reinstated box-shadow */
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .wallpaper-image-card:hover {
+        transform: translate(2px, 2px); /* Push effect */
+        box-shadow: 2px 2px 0 #ff007f; /* Pink shadow on hover */
+        border-color: #ff007f; /* Pink border on hover */
+        z-index: 1; /* Bring hovered image to front */
+    }
+
+    /* Span images across multiple columns/rows for asymmetrical effect */
+    .wallpaper-image-card:nth-child(5n+1) { /* Every 5th image + 1 (1st, 6th, 11th...) */
+        grid-column: span 2; /* Span 2 columns */
+        grid-row: span 2; /* Span 2 rows */
+    }
+
+    .wallpaper-image-card:nth-child(7n+3) { /* Every 7th image + 3 (3rd, 10th, 17th...) */
+        grid-column: span 1;
+        grid-row: span 2;
+    }
+
+    .wallpaper-image-card:nth-child(11n+7) { /* Every 11th image + 7 (7th, 18th...) */
+        grid-column: span 2;
+        grid-row: span 1;
+    }
+
+
+    .wallpaper-image-card img {
+        width: 100%;
+        height: 100%; /* Make image fill the card */
+        display: block;
+        transition: transform 0.3s ease;
+        object-fit: cover; /* Cover the container, cropping if necessary */
+        filter: blur(3px); /* Initial blur for loading effect */
+        opacity: 0.7; /* Initial opacity for loading effect */
+    }
+
+    .wallpaper-image-card img.loaded {
+        filter: none; /* Remove blur when loaded */
+        opacity: 1; /* Full opacity when loaded */
+        transition: filter 0.5s ease, opacity 0.5s ease; /* Smooth transition */
+    }
+
+    .wallpaper-image-card:hover img {
+        transform: scale(1.03);
+    }
+
+    /* Removed .wallpaper-image-actions and related styles */
+
+    /* Pagination */
+    .wallpaper-pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin: 2.5rem 0;
+        flex-wrap: wrap;
+        padding: 0 2rem; /* Add padding for pagination */
+    }
+
+    .wallpaper-page-btn {
+        padding: 10px 15px;
+        background: #2a0a4a;
+        border: 2px solid #00c6ff;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 600;
+        min-width: 45px;
+        color: #e0e0e0;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 0.8rem;
+        text-shadow: 1px 1px 0 #0072ff;
+        box-shadow: 3px 3px 0 #0072ff;
+    }
+
+    .wallpaper-page-btn:hover:not(:disabled) {
+        background: #ff007f;
+        color: white;
+        border-color: #ff8c00;
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0 #ff8c00;
+    }
+
+    .wallpaper-page-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        background: #1a1a2e;
+        border-color: #0d0d2b;
+        box-shadow: none;
+        text-shadow: none;
+    }
+
+    .wallpaper-page-btn.active {
+        background: #ff007f;
+        color: white;
+        border-color: #ff8c00;
+        box-shadow: 1px 1px 0 #ff8c00;
+        transform: translate(1px, 1px);
+    }
+
+    /* Loading and Error messages */
+    .wallpaper-loading, .wallpaper-error {
+        text-align: center;
+        padding: 2rem;
+        color: #e0e0e0;
+        font-family: 'Press Start 2P', cursive;
+    }
+
+    .wallpaper-loading .spinner {
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(0, 198, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #00c6ff;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .wallpaper-error {
+        background: #2a0a4a;
+        border: 2px solid #ff007f;
+        box-shadow: 5px 5px 0 #ff8c00;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        border-radius: 8px;
+    }
+
+    /* Responsive adjustments for the new grid layout */
+    @media (max-width: 1200px) {
+        .wallpaper-gallery { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+        /* Keep existing span rules for larger screens if desired */
+        .wallpaper-image-card:nth-child(5n+1) { grid-column: span 2; grid-row: span 2; }
+        .wallpaper-image-card:nth-child(7n+3) { grid-column: span 1; grid-row: span 2; }
+        .wallpaper-image-card:nth-child(11n+7) { grid-column: span 2; grid-row: span 1; }
+    }
+
+    @media (max-width: 768px) {
+        .wallpaper-gallery {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 0; /* Ensure no gap on smaller screens too */
+        }
+        /* Reset spans for smaller screens to maintain fluid single-column-like flow */
+        .wallpaper-image-card:nth-child(5n+1),
+        .wallpaper-image-card:nth-child(7n+3),
+        .wallpaper-image-card:nth-child(11n+7) {
+            grid-column: span 1;
+            grid-row: span 1;
+        }
+        .wallpaper-search-controls { flex-direction: column; align-items: stretch; }
+        .wallpaper-search-input { max-width: 100%; }
+        .wallpaper-btn { width: 100%; }
+        .wallpaper-header h1 { font-size: 2rem; }
+        .wallpaper-header p { font-size: 1rem; }
+    }
+
+    @media (max-width: 480px) {
+        .wallpaper-gallery { grid-template-columns: 1fr; } /* Single column on very small screens */
+        .wallpaper-pagination { flex-direction: column; gap: 10px; }
+        .wallpaper-page-btn { width: 100%; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wallpaper-container">
+    <div class="wallpaper-header">
+        <h1>Wallpapers</h1>
+        <p>Discover stunning wallpapers</p>
+        <div id="currentQueryDisplay"></div>
+    </div>
+    
+    <div class="wallpaper-search-controls">
+        <input type="text" id="wallpaperSearchInput" class="wallpaper-search-input" placeholder="Search for wallpapers (e.g., anime, nature, cars)">
+        <button id="wallpaperSearchBtn" class="wallpaper-btn">
+            <span class="material-symbols-outlined">search</span> Search
+        </button>
+        <button id="wallpaperRandomBtn" class="wallpaper-btn random-btn">
+            <span class="material-symbols-outlined">casino</span> Random
+        </button>
+    </div>
+    
+    <div class="wallpaper-pagination" id="wallpaperPaginationTop"></div>
+    
+    <div class="wallpaper-loading" id="wallpaperLoading">
+        <div class="spinner"></div>
+        Loading wallpapers...
+    </div>
+    
+    <div class="wallpaper-error" id="wallpaperErrorMessage" style="display: none;"></div>
+    
+    <div class="wallpaper-gallery" id="wallpaperGallery"></div>
+
+    <div class="wallpaper-pagination" id="wallpaperPaginationBottom"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentWallpaperQuery = '';
+    let currentWallpaperPage = 1;
+    let isRandomWallpaperMode = false;
+    let isWallpaperLoading = false;
+
+    // DOM elements
+    const wallpaperSearchInput = document.getElementById('wallpaperSearchInput');
+    const wallpaperSearchBtn = document.getElementById('wallpaperSearchBtn');
+    const wallpaperRandomBtn = document.getElementById('wallpaperRandomBtn');
+    const wallpaperLoading = document.getElementById('wallpaperLoading');
+    const wallpaperErrorMessage = document.getElementById('wallpaperErrorMessage');
+    const wallpaperGallery = document.getElementById('wallpaperGallery');
+    const wallpaperPaginationTop = document.getElementById('wallpaperPaginationTop');
+    const wallpaperPaginationBottom = document.getElementById('wallpaperPaginationBottom');
+    const currentQueryDisplay = document.getElementById('currentQueryDisplay');
+
+    // Get references to navbar elements
+    const navbarSearchContainer = document.getElementById('navbarSearchContainer');
+    const navbarSearchInput = document.getElementById('navbarSearchInput');
+    const localSearchControls = document.querySelector('.wallpaper-search-controls');
+
+
+    // Function to handle moving the search bar
+    function moveWallpaperSearchBarToNavbar(query) {
+        if (query) {
+            // If there's a query, move search to navbar
+            navbarSearchInput.value = query;
+            navbarSearchContainer.classList.add('active');
+            localSearchControls.style.display = 'none'; // Hide local search
+        } else {
+            // If no query, keep local search visible and hide navbar search (on this page)
+            navbarSearchInput.value = ''; // Clear navbar input
+            navbarSearchContainer.classList.remove('active');
+            localSearchControls.style.display = 'flex'; // Show local search
+        }
+    }
+
+    // New function to handle search specifically from the navbar for wallpaper page
+    function searchWallpapersFromNavbar(query) {
+        // This function is called by performSearchFromNavbar in base.html
+        // It should trigger the searchWallpapers logic for the wallpaper page
+        currentWallpaperQuery = query;
+        currentWallpaperPage = 1;
+        isRandomWallpaperMode = false;
+        // The navbar input is already set by base.html, but we ensure our local input matches
+        wallpaperSearchInput.value = query; 
+        searchWallpapers(query, currentWallpaperPage);
+    }
+
+    // Initialize: Load random images when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialQuery = urlParams.get('q') || '';
+
+        if (initialQuery) {
+            currentWallpaperQuery = initialQuery;
+            isRandomWallpaperMode = false;
+            moveWallpaperSearchBarToNavbar(initialQuery);
+            searchWallpapers(initialQuery, 1); // Load images for initial query
+        } else {
+            loadRandomWallpapers(); // Load random if no initial query
+            moveWallpaperSearchBarToNavbar(''); // Ensure navbar search is hidden if no query
+        }
+    });
+
+    // Event listeners
+    wallpaperSearchBtn.addEventListener('click', () => {
+        const query = wallpaperSearchInput.value.trim();
+        if (query) {
+            currentWallpaperQuery = query;
+            currentWallpaperPage = 1;
+            isRandomWallpaperMode = false;
+            moveWallpaperSearchBarToNavbar(query); // Move search bar
+            searchWallpapers(query, currentWallpaperPage);
+        }
+    });
+
+    wallpaperRandomBtn.addEventListener('click', () => {
+        loadRandomWallpapers();
+    });
+
+    wallpaperSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            wallpaperSearchBtn.click();
+        }
+    });
+
+    async function loadRandomWallpapers() {
+        if (isWallpaperLoading) return;
+        isWallpaperLoading = true;
+
+        showWallpaperLoading(true);
+        clearWallpaperGallery();
+        hideWallpaperErrorMessage();
+        disableWallpaperButtons(true);
+
+        try {
+            const response = await fetch('/wallpaper/random');
+            const data = await response.json();
+            
+            showWallpaperLoading(false);
+            disableWallpaperButtons(false);
+
+            if (data.error) {
+                showWallpaperErrorMessage(data.error);
+                return;
+            }
+            
+            if (data.images.length === 0) {
+                showWallpaperErrorMessage("No random wallpapers found. Please try again.");
+                return;
+            }
+            
+            currentWallpaperQuery = data.query;
+            currentWallpaperPage = 1;
+            isRandomWallpaperMode = true;
+            currentQueryDisplay.textContent = `Showing random "${data.query}" wallpapers`;
+            
+            displayWallpapers(data.images);
+            createWallpaperPagination(currentWallpaperPage, true);
+        } catch (error) {
+            console.error('Error loading random wallpapers:', error);
+            showWallpaperLoading(false);
+            disableWallpaperButtons(false);
+            showWallpaperErrorMessage(`Error loading random wallpapers: ${error.message}`);
+        } finally {
+            isWallpaperLoading = false;
+        }
+    }
+
+    async function searchWallpapers(query, page) {
+        if (isWallpaperLoading) return;
+        isWallpaperLoading = true;
+
+        showWallpaperLoading(true);
+        clearWallpaperGallery();
+        hideWallpaperErrorMessage();
+        disableWallpaperButtons(true);
+        
+        try {
+            const response = await fetch(`/wallpaper/search?query=${encodeURIComponent(query)}&page=${page}`);
+            const data = await response.json();
+
+            showWallpaperLoading(false);
+            disableWallpaperButtons(false);
+            
+            if (data.error) {
+                showWallpaperErrorMessage(data.error);
+                return;
+            }
+            
+            if (data.images.length === 0) {
+                showWallpaperErrorMessage(`No wallpapers found for "${query}". Try a different search term.`);
+                return;
+            }
+            
+            currentQueryDisplay.textContent = `Showing "${data.query}" wallpapers - Page ${page}`;
+            displayWallpapers(data.images);
+            createWallpaperPagination(page, false);
+            currentWallpaperPage = page; // Update current page after successful load
+        } catch (error) {
+            console.error('Error searching wallpapers:', error);
+            showWallpaperLoading(false);
+            disableWallpaperButtons(false);
+            showWallpaperErrorMessage(`Error searching wallpapers: ${error.message}`);
+        } finally {
+            isWallpaperLoading = false;
+        }
+    }
+
+    function displayWallpapers(images) {
+        images.forEach((imageUrl, index) => {
+            const imageCard = document.createElement('div');
+            imageCard.className = 'wallpaper-image-card';
+            
+            // Set up click to navigate to image_detail.html
+            imageCard.onclick = () => {
+                const imageUrlParams = new URLSearchParams();
+                imageUrlParams.append('url', imageUrl);
+                // For WallpaperFlare, we don't have detailed metadata like alt, author, likes, source
+                // so we'll use placeholders or derive from the URL if possible.
+                // Using a generic alt text and 'WallpaperFlare' as source.
+                imageUrlParams.append('alt', `Wallpaper ${index + 1}`); 
+                imageUrlParams.append('author', 'WallpaperFlare');
+                imageUrlParams.append('source', 'wallpaperflare'); // Explicitly set source as 'wallpaperflare'
+                imageUrlParams.append('likes', Math.floor(Math.random() * 10000)); // Simulate likes
+                window.location.href = `/image_detail?${imageUrlParams.toString()}`;
+            };
+
+            const imgElement = document.createElement('img');
+            imgElement.className = 'wallpaper-gallery-img'; // New class for wallpaper images
+            imgElement.alt = `Wallpaper ${index + 1}`;
+            imgElement.loading = 'lazy';
+            imgElement.src = imageUrl; // WallpaperFlare provides direct image URLs
+
+            imgElement.onload = function() {
+                this.classList.add('loaded'); // Add loaded class for fade-in effect
+            };
+
+            imgElement.onerror = function() {
+                this.src = 'https://placehold.co/400x300/333333/FFFFFF?text=Image+Error'; // Placeholder for broken images
+                this.classList.add('loaded'); // Still add loaded to remove blur
+            };
+            
+            imageCard.appendChild(imgElement);
+            wallpaperGallery.appendChild(imageCard);
+        });
+    }
+
+    function createWallpaperPagination(currentPage, isRandom = false) {
+        wallpaperPaginationTop.innerHTML = '';
+        wallpaperPaginationBottom.innerHTML = '';
+        
+        // Previous button
+        if (currentPage > 1) {
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'wallpaper-page-btn';
+            prevBtn.textContent = '← Previous';
+            const prevClickHandler = () => { // Define handler once
+                if (isRandom) {
+                    loadRandomWallpapers();
+                } else {
+                    searchWallpapers(currentWallpaperQuery, currentPage - 1);
+                }
+            };
+            // Attach to both top and bottom buttons
+            prevBtn.addEventListener('click', prevClickHandler); 
+            wallpaperPaginationTop.appendChild(prevBtn.cloneNode(true)).addEventListener('click', prevClickHandler); 
+            wallpaperPaginationBottom.appendChild(prevBtn); 
+        }
+        
+        // Current page indicator
+        const currentBtn = document.createElement('button');
+        currentBtn.className = 'wallpaper-page-btn active';
+        currentBtn.textContent = isRandom ? 'Random Results' : `Page ${currentPage}`;
+        wallpaperPaginationTop.appendChild(currentBtn.cloneNode(true));
+        wallpaperPaginationBottom.appendChild(currentBtn);
+        
+        // Next button (always show for random, or if not random and assuming more pages)
+        const nextBtn = document.createElement('button');
+        nextBtn.className = 'wallpaper-page-btn';
+        nextBtn.textContent = isRandom ? 'More Random →' : 'Next →';
+        const nextClickHandler = () => { // Define handler once
+            if (isRandom) {
+                loadRandomWallpapers();
+            } else {
+                searchWallpapers(currentWallpaperQuery, currentPage + 1);
+            }
+        };
+        // Attach to both top and bottom buttons
+        nextBtn.addEventListener('click', nextClickHandler); 
+        wallpaperPaginationTop.appendChild(nextBtn.cloneNode(true)).addEventListener('click', nextClickHandler); 
+        wallpaperPaginationBottom.appendChild(nextBtn); 
+
+        // Hide pagination if no images found or in random mode (only next/prev for random)
+        if (wallpaperGallery.children.length === 0 && !isRandom) {
+            wallpaperPaginationTop.style.display = 'none';
+            wallpaperPaginationBottom.style.display = 'none';
+        } else {
+            wallpaperPaginationTop.style.display = 'flex';
+            wallpaperPaginationBottom.style.display = 'flex';
+        }
+    }
+
+    function showWallpaperLoading(show) {
+        wallpaperLoading.style.display = show ? 'block' : 'none';
+    }
+
+    function showWallpaperErrorMessage(message) {
+        wallpaperErrorMessage.textContent = message;
+        wallpaperErrorMessage.style.display = 'block';
+    }
+
+    function hideWallpaperErrorMessage() {
+        wallpaperErrorMessage.style.display = 'none';
+        wallpaperErrorMessage.textContent = '';
+    }
+
+    function clearWallpaperGallery() {
+        wallpaperGallery.innerHTML = '';
+    }
+
+    function disableWallpaperButtons(disable) {
+        wallpaperSearchBtn.disabled = disable;
+        wallpaperRandomBtn.disabled = disable;
+        wallpaperSearchBtn.textContent = disable ? 'Searching...' : 'Search';
+        wallpaperRandomBtn.textContent = disable ? '🎲 Loading...' : '🎲 Random';
+    }
+
+    // Intersection Observer for lazy loading optimization
+    const wallpaperImageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.classList.add('loaded'); // Add 'loaded' class when image is in view
+                observer.unobserve(img); // Stop observing once loaded
+            }
+        });
+    });
+
+    // Observe new images as they're added to the gallery
+    const wallpaperGalleryObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1 && node.querySelector) {
+                    const imgs = node.querySelectorAll('.wallpaper-gallery-img');
+                    imgs.forEach(img => wallpaperImageObserver.observe(img));
+                }
+            });
+        });
+    });
+
+    // Start observing the wallpaper gallery
+    wallpaperGalleryObserver.observe(document.getElementById('wallpaperGallery'), {
+        childList: true,
+        subtree: true
+    });
+</script>
+{% endblock %}

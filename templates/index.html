@@ -1,0 +1,724 @@
+{% extends "base.html" %}
+
+{% block title %}PIXEREST - Discover Amazing Pixel Art{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Main Search Section */
+    .search-section {
+        text-align: center;
+        padding: 3rem 0;
+        background: none;
+        margin-bottom: 2rem;
+        color: #e0e0e0;
+        position: relative;
+        z-index: 2;
+    }
+
+    .search-section h1 {
+        font-family: 'Press Start 2P', cursive;
+        font-size: 2.5rem;
+        margin-bottom: 0.8rem;
+        color: #ff007f; /* Pink for title */
+        text-shadow: 3px 3px 0 #00c6ff, -3px -3px 0 #ff8c00; /* Multi-color pixel shadow */
+        letter-spacing: 3px;
+        animation: neon-glow 1.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes neon-glow {
+        from {
+            text-shadow: 3px 3px 0 #00c6ff, -3px -3px 0 #ff8c00, 0 0 5px rgba(255, 0, 127, 0.7);
+        }
+        to {
+            text-shadow: 3px 3px 0 #00c6ff, -3px -3px 0 #ff8c00, 0 0 15px rgba(255, 0, 127, 0.9), 0 0 25px rgba(0, 198, 255, 0.5);
+        }
+    }
+
+    .search-section p {
+        font-size: 1.1rem;
+        margin-bottom: 2.5rem;
+        color: #c0c0c0;
+    }
+
+    /* Search Input Container */
+    .search-container {
+        display: flex;
+        justify-content: center;
+        align-items: center; /* Align items vertically */
+        gap: 8px;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        background: #2a0a4a; /* Dark purple background */
+        border: 2px solid #00c6ff; /* Cyan border */
+        border-radius: 6px; /* Slightly rounded, but still blocky */
+        padding: 8px;
+        box-shadow: 5px 5px 0 #0072ff; /* Strong pixelated shadow */
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .search-input {
+        padding: 12px 15px;
+        flex-grow: 1;
+        max-width: 500px;
+        font-size: 1rem;
+        border: none;
+        border-radius: 4px;
+        outline: none;
+        transition: all 0.2s ease;
+        background: #1a1a2e; /* Even darker input background */
+        color: #e0e0e0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Keep readable font for input */
+    }
+
+    .search-input::placeholder {
+        color: #a0a0a0;
+    }
+
+    .search-input:focus {
+        box-shadow: inset 0 0 8px rgba(0, 198, 255, 0.5); /* Inner glow on focus */
+        border: 1px solid #00c6ff;
+    }
+
+    /* Search Button */
+    .search-btn {
+        padding: 12px 18px;
+        font-size: 1rem;
+        background: #ff007f; /* Pink button */
+        color: white;
+        border: 2px solid #ff8c00; /* Orange border */
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 600;
+        box-shadow: 3px 3px 0 #ff8c00; /* Pixelated shadow */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .search-btn:hover {
+        background: #00c6ff; /* Cyan on hover */
+        border-color: #0072ff; /* Darker cyan border */
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0 #0072ff;
+    }
+
+    /* Search Suggestions */
+    .search-suggestions {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+    }
+
+    .suggestion-tag {
+        padding: 8px 15px;
+        background: #2a0a4a; /* Dark purple */
+        border: 1px solid #00c6ff; /* Cyan border */
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+        color: #c0c0c0;
+        text-transform: uppercase;
+        box-shadow: 2px 2px 0 #0072ff;
+    }
+
+    .suggestion-tag:hover {
+        background: #ff007f;
+        color: white;
+        border-color: #ff8c00;
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0 #ff8c00;
+    }
+
+    /* Image Gallery */
+    .gallery {
+        column-count: 4; /* Default for large screens */
+        column-gap: 20px; /* Increased gap */
+        margin-bottom: 2rem;
+    }
+
+    .image-container {
+        position: relative;
+        margin-bottom: 20px; /* Increased margin */
+        break-inside: avoid;
+        border-radius: 8px; /* Slightly rounded corners */
+        overflow: hidden;
+        background: #1a1a2e; /* Dark background for card */
+        border: 2px solid #00c6ff; /* Cyan border */
+        box-shadow: 5px 5px 0 #0072ff; /* Prominent pixelated shadow */
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .image-container:hover {
+        transform: translate(2px, 2px); /* Push effect */
+        box-shadow: 2px 2px 0 #ff007f; /* Pink shadow on hover */
+        border-color: #ff007f; /* Pink border on hover */
+    }
+
+    .gallery-img {
+        width: 100%;
+        display: block;
+        transition: transform 0.3s ease, filter 0.5s ease, opacity 0.5s ease; /* Smooth transitions for loading */
+        filter: blur(3px); /* Initial blur for loading effect */
+        opacity: 0.7; /* Initial opacity for loading effect */
+    }
+
+    .image-container:hover .gallery-img {
+        transform: scale(1.03); /* Slight zoom on hover */
+    }
+
+    .gallery-img.loaded {
+        filter: none; /* Remove blur when loaded */
+        opacity: 1; /* Full opacity when loaded */
+    }
+
+    .image-info {
+        padding: 15px;
+        color: #e0e0e0;
+        text-align: left;
+        font-size: 0.9rem;
+        background: #0d0d2b; /* Darker background for info */
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .image-info p {
+        color: #a0a0a0;
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+
+    .image-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        font-size: 0.8rem;
+        color: #c0c0c0;
+    }
+
+    .image-meta .likes {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #ff007f; /* Pink for likes */
+    }
+
+    .image-meta .likes .material-symbols-outlined {
+        font-size: 1rem; /* Adjust icon size */
+        color: #ff007f;
+        font-variation-settings:
+            'FILL' 1,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+    }
+
+    /* Pagination */
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin: 2.5rem 0;
+        flex-wrap: wrap;
+    }
+
+    .pagination-info {
+        background: #2a0a4a;
+        padding: 10px 18px;
+        border-radius: 6px;
+        font-weight: 600;
+        color: #e0e0e0;
+        margin: 0 0.5rem;
+        border: 2px solid #00c6ff;
+        box-shadow: 3px 3px 0 #0072ff;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 0.8rem;
+    }
+
+    .pagination-btn {
+        padding: 10px 15px;
+        background: #2a0a4a;
+        border: 2px solid #00c6ff;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-weight: 600;
+        min-width: 45px;
+        color: #e0e0e0;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 0.8rem;
+        text-shadow: 1px 1px 0 #0072ff;
+        box-shadow: 3px 3px 0 #0072ff;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+        background: #ff007f;
+        color: white;
+        border-color: #ff8c00;
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0 #ff8c00;
+    }
+
+    .pagination-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+        background: #1a1a2e;
+        border-color: #0d0d2b;
+        box-shadow: none;
+        text-shadow: none;
+    }
+
+    .pagination-btn.active {
+        background: #ff007f;
+        color: white;
+        border-color: #ff8c00;
+        box-shadow: 1px 1px 0 #ff8c00;
+        transform: translate(1px, 1px);
+    }
+
+    /* Loading Spinner */
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 2rem;
+        color: #e0e0e0;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(0, 198, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #00c6ff;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* No Images Message */
+    .no-images {
+        text-align: center;
+        padding: 4rem;
+        color: #c0c0c0;
+        font-size: 1.1rem;
+        background: #2a0a4a;
+        border-radius: 10px;
+        margin: 2rem 0;
+        border: 2px solid #ff007f;
+        box-shadow: 5px 5px 0 #ff8c00;
+        font-family: 'Press Start 2P', cursive;
+        letter-spacing: 1px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .gallery { column-count: 3; }
+    }
+
+    @media (max-width: 768px) {
+        .gallery {
+            column-count: 2;
+            column-gap: 15px;
+        }
+        .search-container { flex-direction: column; align-items: stretch; }
+        .search-input { max-width: 100%; }
+        .search-btn { width: 100%; }
+        .search-section h1 { font-size: 2rem; }
+        .search-section p { font-size: 1rem; }
+    }
+
+    @media (max-width: 480px) {
+        .gallery { column-count: 1; }
+        .pagination-container { flex-direction: column; gap: 10px; }
+        .pagination-info { margin: 0; }
+        .pagination-btn { width: 100%; }
+        .search-suggestions { flex-direction: column; align-items: center; }
+        .suggestion-tag { width: 80%; text-align: center; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-section" id="homeSearchSection">
+    <h1>PIXEREST</h1>
+    <p>Discover & Share Pixel Art & Retro Images</p>
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="SEARCH PIXEL ART...">
+        <button onclick="performSearch()" class="search-btn">
+            <span class="material-symbols-outlined">search</span> SEARCH
+        </button>
+    </div>
+    <div class="search-suggestions">
+        <span class="suggestion-tag" onclick="searchTag('animals')">animals</span>
+        <span class="suggestion-tag" onclick="searchTag('sci-fi pixel')">Sci-Fi </span>
+        <span class="suggestion-tag" onclick="searchTag('fantasy art')">Fantasy Art</span>
+        <span class="suggestion-tag" onclick="searchTag('cityscape pixel')">Cityscape Pixel</span>
+        <span class="suggestion-tag" onclick="searchTag('mountains')">mountains </span>
+        <span class="suggestion-tag" onclick="searchTag('nature')">Nature </span>
+    </div>
+</div>
+
+<div class="pagination-container" id="paginationTop" style="display: none;">
+    <button class="pagination-btn" onclick="changePage(currentPage - 1)">← PREV</button>
+    <div class="pagination-info" id="pageInfo">PAGE 1 OF 1</div>
+    <button class="pagination-btn" onclick="changePage(currentPage + 1)">NEXT →</button>
+</div>
+
+<div class="gallery" id="gallery"></div>
+
+<div class="loading-spinner" id="loadingSpinner">
+    <div class="spinner"></div>
+    <p>LOADING PIXEL ART...</p>
+</div>
+
+<div class="no-images" id="noImages" style="display: none;">
+    <h3>NO IMAGES FOUND!</h3>
+    <p>TRY A DIFFERENT SEARCH TERM OR BROWSE SUGGESTED CATEGORIES.</p>
+</div>
+
+<div class="pagination-container" id="paginationBottom" style="display: none;">
+    <button class="pagination-btn" onclick="changePage(1)">FIRST</button>
+    <button class="pagination-btn" onclick="changePage(currentPage - 1)">← PREV</button>
+    <div id="pageNumbers"></div>
+    <div class="pagination-info" id="pageInfoBottom">PAGE 1 OF 1</div>
+    <button class="pagination-btn" onclick="changePage(currentPage + 1)">NEXT →</button>
+    <button class="pagination-btn" onclick="changePage(totalPages)">LAST</button>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentQuery = "";
+    let isLoading = false;
+
+    // DOM elements
+    const homeSearchSection = document.getElementById('homeSearchSection');
+    const searchInput = document.getElementById('searchInput');
+    const navbarSearchContainer = document.getElementById('navbarSearchContainer');
+    const navbarSearchInput = document.getElementById('navbarSearchInput');
+    const loadingSpinner = document.getElementById('loadingSpinner');
+
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check initial query from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialQuery = urlParams.get('q') || '';
+        if (initialQuery) {
+            currentQuery = initialQuery;
+            searchInput.value = initialQuery; // Set initial query in home search
+            navbarSearchInput.value = initialQuery; // Set initial query in navbar search
+            moveSearchBarToNavbar(true); // Move search bar to navbar if there's an initial query
+        } else {
+            moveSearchBarToNavbar(false); // Keep search bar at home if no query
+        }
+        loadImages();
+
+        // Enter key search for home search bar
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Enter key search for navbar search bar
+        navbarSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearchFromNavbar();
+            }
+        });
+    });
+
+    async function loadImages(page = 1, query = "") {
+        if (isLoading) return;
+
+        isLoading = true;
+        showLoading(true);
+        hideNoImages();
+
+        try {
+            const response = await fetch(`/images?page=${page}&query=${encodeURIComponent(query)}&per_page=24`);
+            const data = await response.json();
+
+            if (data.images && data.images.length > 0) {
+                displayImages(data.images, page === 1);
+                updatePagination(data.current_page, data.total_pages);
+                showPagination(true);
+            } else {
+                if (page === 1) {
+                    clearGallery();
+                    showNoImages();
+                    showPagination(false);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading images:', error);
+            if (page === 1) {
+                showNoImages();
+                showPagination(false);
+            }
+        } finally {
+            showLoading(false);
+            isLoading = false;
+        }
+    }
+
+    function displayImages(images, clearFirst = false) {
+        const gallery = document.getElementById('gallery');
+
+        if (clearFirst) {
+            gallery.innerHTML = '';
+        }
+
+        images.forEach((img, index) => {
+            const container = document.createElement('div');
+            container.className = 'image-container';
+            // Store image data for detail page navigation
+            const imageUrlParams = new URLSearchParams();
+            imageUrlParams.append('url', img.url);
+            imageUrlParams.append('alt', img.alt || 'Untitled');
+            imageUrlParams.append('author', img.author || 'Unknown');
+            imageUrlParams.append('source', img.source);
+            imageUrlParams.append('likes', img.likes || 0);
+
+            container.onclick = () => {
+                window.location.href = `/image_detail?${imageUrlParams.toString()}`;
+            };
+
+            const imgElement = document.createElement('img');
+            imgElement.className = 'gallery-img'; // Removed 'loading' class here, it's added by observer
+            imgElement.alt = img.alt || 'Gallery image';
+            imgElement.loading = 'lazy';
+
+            // Use thumbnail first, then load full image
+            imgElement.src = img.thumbnail || img.url;
+
+            // Add onload and onerror directly for initial state
+            imgElement.onload = function() {
+                this.classList.add('loaded');
+                // Load full resolution after thumbnail
+                if (img.thumbnail && img.thumbnail !== img.url) {
+                    setTimeout(() => {
+                        this.src = img.url;
+                    }, 50);
+                }
+            };
+
+            imgElement.onerror = function() {
+                this.src = 'https://placehold.co/300x200/333333/FFFFFF?text=Image+Error';
+                this.classList.add('loaded'); // Still add loaded to remove blur
+                console.warn('Failed to load image:', this.src);
+            };
+
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'image-info';
+            infoDiv.innerHTML = `
+                <p>By: ${img.author || 'Unknown'}</p>
+                <div class="image-meta">
+                    <span class="likes">
+                        <span class="material-symbols-outlined">favorite</span>
+                        ${img.likes || 0}
+                    </span>
+                </div>
+            `;
+
+            container.appendChild(imgElement);
+            container.appendChild(infoDiv);
+            gallery.appendChild(container);
+
+            // Animate in (optional, can be done purely with CSS if preferred)
+            setTimeout(() => {
+                container.style.opacity = '0';
+                container.style.transform = 'translateY(20px)';
+                container.style.transition = 'all 0.5s ease';
+
+                requestAnimationFrame(() => {
+                    container.style.opacity = '1';
+                    container.style.transform = 'translateY(0)';
+                });
+            }, index * 50);
+        });
+    }
+
+    function updatePagination(current, total) {
+        currentPage = current;
+        totalPages = total;
+
+        const pageInfo = `PAGE ${current} OF ${total}`;
+        document.getElementById('pageInfo').textContent = pageInfo;
+        document.getElementById('pageInfoBottom').textContent = pageInfo;
+
+        // Update navigation buttons
+        const prevButtons = document.querySelectorAll('.pagination-btn');
+        prevButtons.forEach(btn => {
+            if (btn.textContent.includes('PREV') || btn.textContent.includes('FIRST')) {
+                btn.disabled = current <= 1;
+            }
+            if (btn.textContent.includes('NEXT') || btn.textContent.includes('LAST')) {
+                btn.disabled = current >= total;
+            }
+        });
+
+        // Generate page numbers
+        generatePageNumbers();
+    }
+
+    function generatePageNumbers() {
+        const pageNumbers = document.getElementById('pageNumbers');
+        pageNumbers.innerHTML = '';
+
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, currentPage + 2);
+
+        // Adjust if we're near the beginning or end
+        if (currentPage <= 3) {
+            endPage = Math.min(5, totalPages);
+        }
+        if (currentPage >= totalPages - 2) {
+            startPage = Math.max(totalPages - 4, 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.className = `pagination-btn ${i === currentPage ? 'active' : ''}`;
+            pageBtn.textContent = i;
+            pageBtn.onclick = () => changePage(i);
+            pageNumbers.appendChild(pageBtn);
+        }
+    }
+
+    function changePage(page) {
+        if (page < 1 || page > totalPages || page === currentPage || isLoading) return;
+
+        currentPage = page;
+        loadImages(page, currentQuery);
+
+        // Removed auto-scroll to top as per request
+    }
+
+    function performSearch() {
+        const query = searchInput.value.trim();
+        currentQuery = query;
+        currentPage = 1;
+        loadImages(1, query);
+        // Update navbar search input and move bar
+        navbarSearchInput.value = query;
+        moveSearchBarToNavbar(true);
+        // Update URL
+        history.pushState(null, '', `/?q=${encodeURIComponent(query)}`);
+    }
+
+    function performSearchFromNavbar() {
+        const query = navbarSearchInput.value.trim();
+        currentQuery = query;
+        currentPage = 1;
+        loadImages(1, query);
+        // Update home search input
+        searchInput.value = query;
+        // Update URL
+        history.pushState(null, '', `/?q=${encodeURIComponent(query)}`);
+    }
+
+    function searchTag(tag) {
+        searchInput.value = tag;
+        currentQuery = tag;
+        currentPage = 1;
+        loadImages(1, tag);
+        // Update navbar search input and move bar
+        navbarSearchInput.value = tag;
+        moveSearchBarToNavbar(true);
+        // Update URL
+        history.pushState(null, '', `/?q=${encodeURIComponent(tag)}`);
+    }
+
+    function showLoading(show) {
+        loadingSpinner.style.display = show ? 'block' : 'none';
+    }
+
+    function showPagination(show) {
+        document.getElementById('paginationTop').style.display = show ? 'flex' : 'none';
+        document.getElementById('paginationBottom').style.display = show ? 'flex' : 'none';
+    }
+
+    function showNoImages() {
+        document.getElementById('noImages').style.display = 'block';
+    }
+
+    function hideNoImages() {
+        document.getElementById('noImages').style.display = 'none';
+    }
+
+    function clearGallery() {
+        document.getElementById('gallery').innerHTML = '';
+    }
+
+    // Function to move search bar
+    function moveSearchBarToNavbar(isSearchActive) {
+        if (isSearchActive) {
+            homeSearchSection.style.display = 'none';
+            navbarSearchContainer.classList.add('active');
+        } else {
+            homeSearchSection.style.display = 'block';
+            navbarSearchContainer.classList.remove('active');
+        }
+    }
+
+    // Intersection Observer for lazy loading optimization
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.classList.add('loaded');
+                observer.unobserve(img);
+            }
+        });
+    }, {
+        rootMargin: '0px',
+        threshold: 0.1
+    }); // Add options for better performance
+
+    // Observe new images as they're added
+    const galleryObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1 && node.querySelector) {
+                    const imgs = node.querySelectorAll('.gallery-img');
+                    imgs.forEach(img => imageObserver.observe(img));
+                }
+            });
+        });
+    });
+
+    // Start observing the gallery
+    galleryObserver.observe(document.getElementById('gallery'), {
+        childList: true,
+        subtree: true
+    });
+
+
+    // Handle browser back/forward for URL query
+    window.addEventListener('popstate', function(event) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const query = urlParams.get('q') || '';
+        currentQuery = query;
+        searchInput.value = query;
+        navbarSearchInput.value = query;
+        moveSearchBarToNavbar(!!query); // Move based on if query exists
+        loadImages(1, query); // Reload images for the new query
+    });
+</script>
+{% endblock %}

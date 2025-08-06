@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+
+{% block title %}PIXEREST - Explore{% endblock %}
+
+{% block extra_css %}
+<style>
+    .explore-section {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #e0e0e0;
+        background: none; /* Removed background color */
+        border-radius: 0; /* Removed border-radius */
+        border: none; /* Removed border */
+        box-shadow: none; /* Removed box-shadow */
+        margin: 2rem auto;
+        width: 100%; /* Set to full width */
+        max-width: none; /* Ensure it takes full available width */
+    }
+
+    .explore-section h1 {
+        font-family: 'Press Start 2P', cursive;
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+        color: #ff007f;
+        text-shadow: 3px 3px 0 #00c6ff;
+        animation: neon-glow-explore 1.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes neon-glow-explore {
+        from {
+            text-shadow: 3px 3px 0 #00c6ff, 0 0 5px rgba(255, 0, 127, 0.7);
+        }
+        to {
+            text-shadow: 3px 3px 0 #00c6ff, 0 0 15px rgba(255, 0, 127, 0.9), 0 0 25px rgba(0, 198, 255, 0.5);
+        }
+    }
+
+    .explore-section p {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+        color: #c0c0c0;
+    }
+
+    .explore-categories {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px; /* Increased gap */
+        margin-top: 2rem;
+    }
+
+    .category-card {
+        background: #0d0d2b;
+        border: 3px solid #ff007f; /* Thicker border */
+        border-radius: 8px;
+        padding: 25px; /* More padding */
+        text-align: center;
+        width: 200px; /* Slightly larger cards */
+        height: 200px; /* Slightly larger cards */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 6px 6px 0 #ff8c00; /* More pronounced shadow */
+        position: relative;
+        overflow: hidden; /* For pseudo-elements */
+    }
+
+    .category-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, rgba(0,198,255,0.2) 0%, rgba(0,198,255,0) 70%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 0;
+    }
+
+    .category-card:hover::before {
+        opacity: 1;
+    }
+
+    .category-card:hover {
+        transform: translateY(-8px); /* More pronounced lift */
+        box-shadow: 8px 8px 0 #00c6ff; /* New shadow color on hover */
+        background: #1a1a2e;
+        border-color: #00c6ff; /* Cyan border on hover */
+    }
+
+    .category-card .material-symbols-outlined {
+        font-size: 3.5rem; /* Larger icons */
+        color: #00c6ff;
+        margin-bottom: 15px; /* More space */
+        position: relative;
+        z-index: 1; /* Ensure icon is above pseudo-element */
+    }
+
+    .category-card h3 {
+        font-family: 'Press Start 2P', cursive;
+        font-size: 1.1rem; /* Slightly larger text */
+        color: #e0e0e0;
+        position: relative;
+        z-index: 1; /* Ensure text is above pseudo-element */
+    }
+
+    /* Styles for Latest Images Section (reused from index.html where applicable) */
+    .latest-images-section {
+        margin-top: 4rem;
+        width: 100%;
+        max-width: 1400px;
+        text-align: center;
+    }
+
+    .latest-images-section h2 {
+        font-family: 'Press Start 2P', cursive;
+        font-size: 2rem;
+        color: #ff007f;
+        text-shadow: 3px 3px 0 #00c6ff;
+        margin-bottom: 2rem;
+    }
+
+    .latest-images-gallery {
+        column-count: 4; /* Default for large screens */
+        column-gap: 20px; /* Increased gap */
+        margin-bottom: 2rem;
+    }
+
+    .latest-images-gallery .image-container {
+        position: relative;
+        margin-bottom: 20px;
+        break-inside: avoid;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #1a1a2e;
+        border: 2px solid #00c6ff;
+        box-shadow: 5px 5px 0 #0072ff;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .latest-images-gallery .image-container:hover {
+        transform: translate(2px, 2px);
+        box-shadow: 2px 2px 0 #ff007f;
+        border-color: #ff007f;
+    }
+
+    .latest-images-gallery .gallery-img {
+        width: 100%;
+        display: block;
+        transition: transform 0.3s ease, filter 0.5s ease, opacity 0.5s ease;
+        filter: blur(3px); /* Initial blur */
+        opacity: 0.7; /* Initial opacity */
+    }
+
+    .latest-images-gallery .image-container:hover .gallery-img {
+        transform: scale(1.03);
+    }
+
+    .latest-images-gallery .gallery-img.loaded {
+        opacity: 1;
+        filter: none;
+    }
+
+    .latest-images-gallery .image-info {
+        padding: 15px;
+        color: #e0e0e0;
+        text-align: left;
+        font-size: 0.9rem;
+        background: #0d0d2b;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .latest-images-gallery .image-info p {
+        color: #a0a0a0;
+        font-size: 0.85rem;
+        margin-bottom: 5px;
+    }
+
+    .latest-images-gallery .image-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        font-size: 0.8rem;
+        color: #c0c0c0;
+    }
+
+    .latest-images-gallery .image-meta .likes {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        color: #ff007f;
+        cursor: pointer;
+    }
+
+    .latest-images-gallery .image-meta .likes .material-symbols-outlined {
+        font-size: 1rem;
+        color: #ff007f;
+        font-variation-settings:
+            'FILL' 1,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+    }
+
+    .latest-images-gallery .image-meta .likes.liked .material-symbols-outlined {
+        color: #ff8c00;
+        font-variation-settings:
+            'FILL' 1,
+            'wght' 700,
+            'GRAD' 200,
+            'opsz' 24
+    }
+
+    .loading-spinner { /* Reusing the main loading spinner style */
+        display: none;
+        text-align: center;
+        padding: 2rem;
+        color: #e0e0e0;
+    }
+
+    .spinner { /* Reusing the main spinner style */
+        display: inline-block;
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(0, 198, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #00c6ff;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .no-images { /* Reusing the no-images style */
+        text-align: center;
+        padding: 4rem;
+        color: #c0c0c0;
+        font-size: 1.1rem;
+        background: #2a0a4a;
+        border-radius: 10px;
+        margin: 2rem auto; /* Adjusted margin for explore page */
+        border: 2px solid #ff007f;
+        box-shadow: 5px 5px 0 #ff8c00;
+        font-family: 'Press Start 2P', cursive;
+        letter-spacing: 1px;
+        max-width: 600px; /* Constrain width */
+    }
+
+    @media (max-width: 1200px) {
+        .latest-images-gallery { column-count: 3; }
+    }
+
+    @media (max-width: 768px) {
+        .explore-section h1 {
+            font-size: 2rem;
+        }
+        .explore-section p {
+            font-size: 1rem;
+        }
+        .category-card {
+            width: 150px;
+            height: 150px;
+            padding: 15px;
+        }
+        .category-card .material-symbols-outlined {
+            font-size: 2.5rem;
+        }
+        .latest-images-gallery {
+            column-count: 2;
+            column-gap: 15px;
+        }
+        .latest-images-section h2 {
+            font-size: 1.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .latest-images-gallery { column-count: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="explore-section">
+    <h1>EXPLORE PIXEL ART</h1>
+    <p>Dive into a world of vibrant pixel art. Discover new styles, artists, and categories.</p>
+    <div class="explore-categories">
+        <div class="category-card" onclick="window.location.href='/?q=games'">
+            <span class="material-symbols-outlined">stadia_controller</span>
+            <h3>Games</h3>
+        </div>
+        <div class="category-card" onclick="window.location.href='/?q=characters'">
+            <span class="material-symbols-outlined">person</span>
+            <h3>Characters</h3>
+        </div>
+        <div class="category-card" onclick="window.location.href='/?q=scenes'">
+            <span class="material-symbols-outlined">landscape</span>
+            <h3>Scenes</h3>
+        </div>
+        <div class="category-card" onclick="window.location.href='/?q=abstract'">
+            <span class="material-symbols-outlined">brush</span>
+            <h3>Abstract</h3>
+        </div>
+        <div class="category-card" onclick="window.location.href='/?q=animals'">
+            <span class="material-symbols-outlined">pets</span>
+            <h3>Animals</h3>
+        </div>
+        <div class="category-card" onclick="window.location.href='/?q=food'">
+            <span class="material-symbols-outlined">ramen_dining</span>
+            <h3>Food</h3>
+        </div>
+        <div class="category-card" onclick="window.location.href='/?q=fantasy'">
+            <span class="material-symbols-outlined">castle</span>
+            <h3>Fantasy</h3>
+        </div> {# New category card #}
+    </div>
+</div>
+
+<div class="latest-images-section">
+    <h2>LATEST ADDITIONS</h2>
+    <div class="latest-images-gallery" id="latestImagesGallery">
+        <!-- Latest images will be loaded here via JavaScript -->
+    </div>
+    <div class="loading-spinner" id="latestImagesLoadingSpinner">
+        <div class="spinner"></div>
+        <p>LOADING LATEST IMAGES...</p>
+    </div>
+    <div class="no-images" id="noLatestImages" style="display: none;">
+        <p>No latest images found.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Client-side like functionality (reused from index.html)
+    function handleLike(likeSpan) {
+        let currentLikes = parseInt(likeSpan.dataset.likes);
+        const icon = likeSpan.querySelector('.material-symbols-outlined');
+        const countSpan = likeSpan.querySelector('.like-count');
+
+        if (likeSpan.classList.contains('liked')) {
+            currentLikes--;
+            likeSpan.classList.remove('liked');
+            icon.textContent = 'favorite';
+        } else {
+            currentLikes++;
+            likeSpan.classList.add('liked');
+            icon.textContent = 'favorite';
+        }
+        likeSpan.dataset.likes = currentLikes;
+        countSpan.textContent = currentLikes;
+    }
+
+    // Function to load "latest images"
+    async function loadLatestImages() {
+        const latestImagesGallery = document.getElementById('latestImagesGallery');
+        const loadingSpinner = document.getElementById('latestImagesLoadingSpinner');
+        const noLatestImages = document.getElementById('noLatestImages');
+
+        loadingSpinner.style.display = 'block';
+        noLatestImages.style.display = 'none';
+        latestImagesGallery.innerHTML = ''; // Clear previous images
+
+        try {
+            // Fetch images using the main API endpoint, no specific query for "latest"
+            const response = await fetch(`/images?page=1&per_page=24`); // Fetch 24 latest images
+            const data = await response.json();
+
+            if (data.images && data.images.length > 0) {
+                data.images.forEach((img, index) => {
+                    const container = document.createElement('div');
+                    container.className = 'image-container';
+                    // Store image data for detail page navigation
+                    const imageUrlParams = new URLSearchParams();
+                    imageUrlParams.append('url', img.url);
+                    imageUrlParams.append('alt', img.alt || 'Untitled');
+                    imageUrlParams.append('author', img.author || 'Unknown');
+                    imageUrlParams.append('source', img.source);
+                    imageUrlParams.append('likes', img.likes || 0);
+
+                    container.onclick = () => {
+                        window.location.href = `/image_detail?${imageUrlParams.toString()}`;
+                    };
+
+                    const imgElement = document.createElement('img');
+                    imgElement.className = 'gallery-img'; // Removed 'loading' class here
+                    imgElement.alt = img.alt || 'Latest image';
+                    imgElement.loading = 'lazy';
+                    imgElement.src = img.thumbnail || img.url;
+
+                    imgElement.onload = function() {
+                        this.classList.add('loaded');
+                        if (img.thumbnail && img.thumbnail !== img.url) {
+                            setTimeout(() => {
+                                this.src = img.url;
+                            }, 50);
+                        }
+                    };
+
+                    imgElement.onerror = function() {
+                        this.src = 'https://placehold.co/300x200/333333/FFFFFF?text=Image+Error';
+                        this.classList.add('loaded');
+                        console.warn('Failed to load image:', this.src);
+                    };
+
+                    const infoDiv = document.createElement('div');
+                    infoDiv.className = 'image-info';
+                    infoDiv.innerHTML = `
+                        <p>By: ${img.author || 'Unknown'}</p>
+                        <div class="image-meta">
+                            <span class="likes" data-likes="${img.likes || 0}" onclick="event.stopPropagation(); handleLike(this);">
+                                <span class="material-symbols-outlined">favorite</span>
+                                <span class="like-count">${img.likes || 0}</span>
+                            </span>
+                        </div>
+                    `;
+
+                    container.appendChild(imgElement);
+                    container.appendChild(infoDiv);
+                    latestImagesGallery.appendChild(container);
+
+                    // Animate in
+                    setTimeout(() => {
+                        container.style.opacity = '0';
+                        container.style.transform = 'translateY(20px)';
+                        container.style.transition = 'all 0.5s ease';
+
+                        requestAnimationFrame(() => {
+                            container.style.opacity = '1';
+                            container.style.transform = 'translateY(0)';
+                        });
+                    }, index * 50);
+                });
+            } else {
+                noLatestImages.style.display = 'block';
+            }
+        } catch (error) {
+            console.error('Error loading latest images:', error);
+            noLatestImages.style.display = 'block';
+        } finally {
+            loadingSpinner.style.display = 'none';
+        }
+    }
+
+    // Intersection Observer for lazy loading optimization (reused)
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.classList.add('loaded');
+                observer.unobserve(img);
+            }
+        });
+    }, {
+        rootMargin: '0px',
+        threshold: 0.1
+    });
+
+    // Observe new images as they're added to the latest images gallery
+    const latestGalleryObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            mutation.addedNodes.forEach((node) => {
+                if (node.nodeType === 1 && node.querySelector) {
+                    const imgs = node.querySelectorAll('.gallery-img');
+                    imgs.forEach(img => imageObserver.observe(img));
+                }
+            });
+        });
+    });
+
+    // Start observing the latest images gallery
+    document.addEventListener('DOMContentLoaded', function() {
+        const latestImagesGallery = document.getElementById('latestImagesGallery');
+        latestGalleryObserver.observe(latestImagesGallery, {
+            childList: true,
+            subtree: true
+        });
+        loadLatestImages(); // Load images when the page loads
+    });
+</script>
+{% endblock %}

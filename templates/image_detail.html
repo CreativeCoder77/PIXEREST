@@ -1,0 +1,503 @@
+{% extends "base.html" %}
+
+{% block title %}PIXEREST - {{ image_alt }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .image-detail-section {
+        padding: 2rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        color: #e0e0e0;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .detail-image-container {
+        flex: 2;
+        min-width: 300px;
+        max-width: 70%;
+        background: #1a1a2e;
+        border: 2px solid #00c6ff;
+        border-radius: 8px;
+        box-shadow: 5px 5px 0 #0072ff;
+        padding: 15px;
+        text-align: center;
+    }
+
+    .detail-image {
+        max-width: 100%;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+        border-radius: 4px;
+        border: 1px solid #2a0a4a;
+    }
+
+    .detail-sidebar {
+        flex: 1;
+        min-width: 250px;
+        background: #1a1a2e;
+        border: 2px solid #ff007f;
+        border-radius: 8px;
+        box-shadow: 5px 5px 0 #ff8c00;
+        padding: 15px;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .sidebar-info p {
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+    }
+
+    .sidebar-info strong {
+        color: #00c6ff;
+    }
+
+    .sidebar-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .action-button {
+        background: #ff007f;
+        color: white;
+        border: 2px solid #ff8c00;
+        padding: 12px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: bold;
+        transition: all 0.2s ease;
+        box-shadow: 3px 3px 0 #ff8c00;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .action-button:hover {
+        background: #00c6ff;
+        border-color: #0072ff;
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0 #0072ff;
+    }
+
+    .more-images-section {
+        width: 100%;
+        padding: 2rem;
+        text-align: center;
+        color: #e0e0e0;
+    }
+
+    .more-images-section h2 {
+        font-family: 'Press Start 2P', cursive;
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        color: #00c6ff;
+        text-shadow: 3px 3px 0 #0072ff, -3px -3px 0 #ff007f;
+    }
+
+    /* Changed to CSS Grid for uniform square images */
+    .more-images-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Responsive columns */
+        gap: 15px; /* Gap between grid items */
+        justify-content: center; /* Center grid items if they don't fill the last row */
+        align-items: stretch; /* Ensure items stretch to fill row height */
+    }
+
+    .more-image-card {
+        position: relative;
+        display: flex; /* Use flex to center image within card */
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        aspect-ratio: 1 / 1; /* Force square aspect ratio */
+        border-radius: 8px;
+        overflow: hidden;
+        background: #1a1a2e;
+        border: 2px solid #00c6ff;
+        box-shadow: 5px 5px 0 #0072ff;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .more-image-card:hover {
+        transform: translate(2px, 2px);
+        box-shadow: 2px 2px 0 #ff007f;
+        border-color: #ff007f;
+        z-index: 1;
+    }
+
+    .more-image-card img {
+        width: 100%;
+        height: 100%; /* Fill the square container */
+        object-fit: cover; /* Crop image to fit, avoiding empty space */
+        display: block;
+        transition: transform 0.3s ease, filter 0.5s ease, opacity 0.5s ease;
+        filter: blur(3px);
+        opacity: 0.7;
+    }
+
+    .more-image-card img.loaded {
+        filter: none;
+        opacity: 1;
+    }
+
+    .more-image-card:hover img {
+        transform: scale(1.03);
+    }
+
+    .loading-indicator {
+        text-align: center;
+        padding: 20px;
+        font-family: 'Press Start 2P', cursive;
+        display: none;
+    }
+
+    .loading-indicator .spinner {
+        border: 4px solid rgba(0, 198, 255, 0.3);
+        border-top: 4px solid #00c6ff;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 10px auto;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .custom-popup-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(8px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    .custom-popup-overlay.show {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .custom-popup-content {
+        background: #1a1a2e;
+        border: 2px solid #00c6ff;
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.7);
+        padding: 30px;
+        text-align: center;
+        color: #e0e0e0;
+        max-width: 400px;
+        width: 90%;
+        position: relative;
+        transform: translateY(-50px);
+        transition: transform 0.4s ease;
+    }
+
+    .custom-popup-overlay.show .custom-popup-content {
+        transform: translateY(0);
+    }
+
+    .custom-popup-content h3 {
+        font-family: 'Press Start 2P', cursive;
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        color: #ff007f;
+    }
+
+    .custom-popup-content p {
+        margin-bottom: 20px;
+        font-size: 1rem;
+    }
+
+    .custom-popup-content button {
+        background: #00c6ff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: bold;
+        transition: background 0.2s ease;
+    }
+
+    .custom-popup-content button:hover {
+        background: #0072ff;
+    }
+
+    /* Responsive adjustments for different screen sizes */
+    @media (max-width: 1200px) {
+        .more-images-gallery {
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        }
+    }
+
+    @media (max-width: 768px) {
+        .image-detail-section {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .detail-image-container,
+        .detail-sidebar {
+            max-width: 95%;
+            min-width: unset;
+            width: 100%;
+        }
+
+        .more-images-gallery {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        }
+    }
+
+    @media (max-width: 480px) {
+        .more-images-gallery {
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="image-detail-section">
+    <div class="detail-image-container">
+        <img src="{{ image_url }}" alt="{{ image_alt }}" class="detail-image"
+            onerror="this.onerror=null;this.src='https://placehold.co/600x400/333333/FFFFFF?text=Image+Error';">
+    </div>
+    <div class="detail-sidebar">
+        <div class="sidebar-info">
+            <p><strong>Title:</strong> {{ image_alt }}</p>
+            <p><strong>Artist/Source:</strong>  {{ image_author }}</p>
+            <p><strong>Likes:</strong> <span id="imageLikesCount">{{ image_likes }}</span></p>
+        </div>
+        <div class="sidebar-actions">
+            <a href="/download_image?url={{ image_url | urlencode }}&filename={{ image_alt | urlencode }}.jpg"
+                class="action-button">
+                <span class="material-symbols-outlined">download</span> Download
+            </a>
+            <button class="action-button" onclick="sharePage('{{ image_alt | e }}')">
+                <span class="material-symbols-outlined">share</span> Share
+            </button>
+            <button class="action-button" onclick="copyPageUrlToClipboard()">
+                <span class="material-symbols-outlined">content_copy</span> Copy URL
+            </button>
+            <button class="action-button" id="likeButton" onclick="likeImage('{{ image_url | e }}')">
+                <span class="material-symbols-outlined">favorite</span> Like
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="more-images-section">
+    <h2>You might also like</h2>
+    <div class="loading-indicator" id="moreImagesLoading">
+        <div class="spinner"></div>
+        Loading more images...
+    </div>
+    <div class="more-images-gallery" id="moreImagesGallery">
+        <!-- More images will be loaded here by JavaScript -->
+    </div>
+</div>
+
+<!-- Custom Popup Structure -->
+<div id="customPopupOverlay" class="custom-popup-overlay">
+    <div class="custom-popup-content">
+        <h3 id="popupTitle"></h3>
+        <p id="popupMessage"></p>
+        <button onclick="hideCustomPopup()">OK</button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showCustomPopup(title, message) {
+        document.getElementById('popupTitle').textContent = title;
+        document.getElementById('popupMessage').textContent = message;
+        document.getElementById('customPopupOverlay').classList.add('show');
+    }
+
+    function hideCustomPopup() {
+        document.getElementById('customPopupOverlay').classList.remove('show');
+    }
+
+    async function sharePage(imageAlt) {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: imageAlt,
+                    url: window.location.href,
+                });
+                console.log('Thanks for sharing!');
+            } catch (error) {
+                console.error('Error sharing:', error);
+            }
+        } else {
+            showCustomPopup('Share Not Supported', 'Web Share API is not supported in this browser. You can copy the URL instead.');
+        }
+    }
+
+    function copyPageUrlToClipboard() {
+        const tempInput = document.createElement('textarea');
+        tempInput.value = window.location.href;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        showCustomPopup('URL Copied!', 'Page URL copied to clipboard!');
+    }
+
+    async function likeImage(imageUrl) {
+        const likeButton = document.getElementById('likeButton');
+        const imageLikesCount = document.getElementById('imageLikesCount');
+
+        likeButton.disabled = true;
+        likeButton.innerHTML = '<span class="material-symbols-outlined">favorite</span> Liking...';
+
+        try {
+            const response = await fetch('/like_image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ image_url: imageUrl }),
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    imageLikesCount.textContent = data.new_likes_count;
+                    likeButton.innerHTML = '<span class="material-symbols-outlined">favorite</span> Liked!';
+                    showCustomPopup('Success!', 'Image liked successfully!');
+                } else {
+                    showCustomPopup('Failed to Like', 'Failed to like image: ' + data.message);
+                    likeButton.innerHTML = '<span class="material-symbols-outlined">favorite</span> Like';
+                    likeButton.disabled = false;
+                }
+            } else {
+                showCustomPopup('Error', 'Error liking image: ' + response.statusText);
+                likeButton.innerHTML = '<span class="material-symbols-outlined">favorite</span> Like';
+                likeButton.disabled = false;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showCustomPopup('Error', 'An error occurred while liking the image.');
+            likeButton.innerHTML = '<span class="material-symbols-outlined">favorite</span> Like';
+            likeButton.disabled = false;
+        }
+    }
+
+    async function loadMoreImages(query, source) {
+        const moreImagesGallery = document.getElementById('moreImagesGallery');
+        const moreImagesLoading = document.getElementById('moreImagesLoading');
+        moreImagesGallery.innerHTML = '';
+        moreImagesLoading.style.display = 'block';
+
+        try {
+            let queryForRelatedImages = query || "art";
+            if (queryForRelatedImages.toLowerCase().includes("image")) {
+                queryForRelatedImages = "abstract art";
+            }
+
+            const response = await fetch(`/related_images?source=${encodeURIComponent(source)}&query=${encodeURIComponent(queryForRelatedImages)}`);
+            const data = await response.json();
+
+            moreImagesLoading.style.display = 'none';
+
+            if (data.images && data.images.length > 0) {
+                data.images.forEach(img => {
+                    const imgCard = document.createElement('div');
+                    imgCard.className = 'more-image-card';
+                    imgCard.innerHTML = `
+                        <img src="${img.url}" alt="${img.alt}" onerror="this.onerror=null;this.src='https://placehold.co/300x200/333333/FFFFFF?text=Image+Error';">
+                    `;
+                    const imgElement = imgCard.querySelector('img');
+                    if (imgElement) {
+                        imgElement.onload = function () {
+                            this.classList.add('loaded');
+                        };
+                        imgElement.onerror = function () {
+                            this.src = 'https://placehold.co/300x200/333333/FFFFFF?text=Image+Error';
+                            this.classList.add('loaded');
+                        };
+                    }
+
+                    imgCard.onclick = () => {
+                        const newUrlParams = new URLSearchParams();
+                        newUrlParams.append('url', img.url);
+                        newUrlParams.append('alt', img.alt);
+                        newUrlParams.append('author', img.author || 'Unknown');
+                        newUrlParams.append('source', img.source || 'Unknown');
+                        newUrlParams.append('likes', img.likes || 0);
+                        window.location.href = `/image_detail?${newUrlParams.toString()}`;
+                    };
+                    moreImagesGallery.appendChild(imgCard);
+                });
+            } else {
+                moreImagesGallery.innerHTML = '<p>No related images found.</p>';
+            }
+        } catch (error) {
+            console.error('Error loading more images:', error);
+            moreImagesLoading.style.display = 'none';
+            moreImagesGallery.innerHTML = '<p>Failed to load related images. Please try again later.</p>';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentImageAlt = "{{ image_alt | e }}";
+        const currentImageSource = "{{ image_source | e }}";
+
+        loadMoreImages(currentImageAlt, currentImageSource);
+
+        const navbarSearchContainer = document.getElementById('navbarSearchContainer');
+        const navbarSearchInput = document.getElementById('navbarSearchInput');
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialQuery = urlParams.get('q') || '';
+        if (initialQuery) {
+            navbarSearchInput.value = initialQuery;
+            navbarSearchContainer.classList.add('active');
+        } else {
+            navbarSearchContainer.classList.add('active');
+        }
+
+        navbarSearchInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const query = navbarSearchInput.value.trim();
+                window.location.href = `/?q=${encodeURIComponent(query)}`;
+            }
+        });
+    });
+
+    function performSearchFromNavbar() {
+        const query = navbarSearchInput.value.trim();
+        window.location.href = `/?q=${encodeURIComponent(query)}`;
+    }
+</script>
+{% endblock %}
