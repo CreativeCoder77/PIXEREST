@@ -5,12 +5,6 @@ import os
 from io import BytesIO
 from bs4 import BeautifulSoup
 
-try:
-    from config import UNSPLASH_ACCESS_KEY, PEXELS_API_KEY
-    print(f"✅ Config loaded - Unsplash key: {'SET' if UNSPLASH_ACCESS_KEY else 'MISSING'}\n")
-    print(f"✅ Config loaded - Pexels key: {'SET' if PEXELS_API_KEY else 'MISSING'}\n")
-except ImportError:
-    print("❌ Config file not found! Creating sample config...\n")
 
 app = Flask(__name__)
 
@@ -18,6 +12,7 @@ app = Flask(__name__)
 # KEYS TO ACCESS THE IMAGES
 UNSPLASH_ACCESS_KEY = os.environ.get("UNSPLASH_ACCESS_KEY")
 PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")  
+
 
 RANDOM_WALLPAPER_QUERIES = [
     'nature', 'abstract', 'space', 'city', 'ocean', 'mountain', 'sunset', 
@@ -29,7 +24,8 @@ def fetch_wallpaperflare_images(query, page=1):
     query = query.replace(' ', '+')
     url = f"https://www.wallpaperflare.com/search?wallpaper={query}&page={page}"
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/115.0.0.0 Safari/537.36"
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36",
+    "Referer": "https://www.google.com/"
     }
 
     try:
@@ -232,7 +228,6 @@ def fetch_images():
                     })
                 
                 api_results['pexels'] = {'success': True, 'count': len(photos), 'error': None}
-                print(f"✅ Pexels: {len(photos)} images")
             else:
                 error_msg = f"Status {pexels.status_code}: {pexels.text}"
                 api_results['pexels']['error'] = error_msg
